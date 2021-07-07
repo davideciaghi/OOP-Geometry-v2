@@ -66,18 +66,25 @@ class Polygon {  // è una classe
 
     protected:
 
-        const PointArray * arr;  // 
-        static unsigned int npolygons;  // Per tenere traccia del numero di istanze di Polygon create
+        const PointArray* arr;  // 
+        static int npolygons;  // Per tenere traccia del numero di istanze di Polygon create
+
+        static Point constructorPoints [4];  // Array di punti
+        static Point* updateConstructorPoints ( const Point & p1 ,
+                                                const Point & p2 ,
+                                                const Point & p3 ,
+                                                const Point & p4 = Point(0,0));
 
     public:
 
-        Polygon(const Point points[], const int size);
-        ~Polygon();
-        Polygon(const PointArray& iarr);
-        Polygon(const Polygon& pol);
+        Polygon(const Point points[], const int size);  // Costruttore che inizializza l'array di punti
+        Polygon(const PointArray *iarr);  // Costruttore che inizializza l'array di punti passato un altro array di punti
+        Polygon(const Polygon &pol);
+        ~Polygon();  // Distruttore
+        virtual double area() const = 0; // è un metodo virtuale da definire nelle classi che la erediteranno.
         static int getNumPolygons();
         int getNumSides() const;
-        int PointArray* getPoints() const;
+        const PointArray* getPoints() const;
 
 
 };
@@ -87,21 +94,24 @@ class Rectangle : public Polygon {
 
     public:
 
-        Rectangle(const Point p1, const Point p2) {
-        Point * updateConstructorPoints ( const Point & p1 , const Point & p2, const Point & p3 , const Point & p4 = Point (0 ,0));
-        Rectangle(const Point lowleft, const Point upright):    
-        Polygon{
+        Rectangle(const Point low_left, const Point up_right);
+        Rectangle(const int x1, const int y1, const int x2, const int y2);
+        virtual double area() const;
 
-        {updateConstructorPoints(
-            Point(34,24),
-            Point(34,24),
-            Point(34,24),
-            Point(34,24))}, 4 
-        }
+};
 
 
 
-}
+class Triangle : public Polygon {
+
+    public:
+
+        Triangle(const Point p1, const Point p2, const Point p3);
+
+        virtual double area() const;
+
+};
+
 
 
 #endif // GEOMETRY_H

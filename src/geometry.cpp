@@ -2,6 +2,7 @@
 #include <geometry.h>
 #include "iostream"
 #include <string>
+#include <cmath>
 
 
 using namespace std;
@@ -187,7 +188,22 @@ const Point * PointArray::get(const int pos) const {  // Metodo get con punto no
 
 
 
-unsigned int Polygon::npolygons = 0;
+int Polygon::npolygons = 0;
+Point Polygon::constructorPoints [4];
+
+
+Point * Polygon::updateConstructorPoints ( const Point & p1 ,
+                                           const Point & p2 ,
+                                           const Point & p3 ,
+                                           const Point & p4 ) {
+    Polygon::constructorPoints [0] = p1;   
+    Polygon::constructorPoints [1] = p2; 
+    Polygon::constructorPoints [2] = p3; 
+    Polygon::constructorPoints [3] = p4;                                              
+
+    return Polygon::constructorPoints;
+}
+
 
 
 Polygon::Polygon(const Point points[], const int size) {  // Costruttore di Polygon
@@ -207,38 +223,39 @@ Polygon::~Polygon() {
 }
 
 
-Polygon::Polygon(const PointArray& iarr) {  // Costruttore che prende un PointArray dall'eseterno
+Polygon::Polygon(const PointArray *iarr) : arr{iarr} {  // Costruttore che prende un PointArray dall'eseterno
 
-    if (iarr.get_size() < 3) {
+    cout << "DEBUG: Polygon PointArray constructor" << endl;
+
+    if (iarr->get_size() < 3) {
         throw std::invalid_argument("Size < 3");
     }
-    this->arr = &iarr;
-    this->npolygons += 1;
+    Polygon::npolygons += 1;
 }
 
 
-Polygon::Polygon(const Polygon& pol) {  // Costruttore copia
+Polygon::Polygon(const Polygon &pol) {  // Costruttore copia, chiama il costruttore copia del PointArray
+    
+    cout << "DEBUG: Polygon copy constructor" << endl;
+
     this->arr = new PointArray(*pol.arr);
-    this->npolygons += 1;
+    Polygon::npolygons += 1;
 }
 
 
-virtual double area() const = 0;  // è un metodo virtuale da definire nelle classi che la erediteranno.
 
-
-
-static int Polygon::getNumPolygons() {
+int Polygon::getNumPolygons() {
 
     return Polygon::npolygons;
 }
 
 int Polygon::getNumSides() const {
 
-    this->arr->get_size();
+    return this->arr->get_size();
 }
 
 
-int Polygon::PointArray* getPoints() const {
+const PointArray* Polygon::getPoints() const {
 
     return this->arr;
 
@@ -247,31 +264,65 @@ int Polygon::PointArray* getPoints() const {
 
 
 
+Rectangle::Rectangle(const Point low_left, const Point up_right) : Polygon{ Polygon::updateConstructorPoints(
+                                                                    low_left, 
+                                                                    Point(up_right.get_x(), low_left.get_y()), 
+                                                                    up_right,
+                                                                    Point(low_left.get_x(), up_right.get_y())
+                                                                    ), 
+                                                                    4  }  {
+    cout << "Rectangle(low_left, up_right) constructor" << endl;
+};
+  
 
-Point constructorPoints [4];  // Array di punti
- 
-Point * Polygon::updateConstructorPoints ( const Point & p1 , const Point & p2, const Point & p3 , const Point & p4 = Point (0 ,0) ) {
-   constructorPoints [0] = p1;
-   constructorPoints [1] = p2;
-   constructorPoints [2] = p3;
-   constructorPoints [3] = p4;
- 
-   return constructorPoints ;
+Rectangle::Rectangle(const int x1,const int y1,const  int x2, const int y2) : Polygon{ Polygon::updateConstructorPoints(
+                                                                    Point(x1,y1), 
+                                                                    Point(x2,y1), 
+                                                                    Point(x2,y2), 
+                                                                    Point(x1,y2)
+                                                                    ), 
+                                                                    4  }  {
+    cout << "Rectangle(x1,y1,x2,y2) constructor" << endl;
 }
 
 
-// Chiamo il costruttore del padre:
-Regtangle::Rectangle(const Point low_left, const Point up_right) : Polygon{
 
-        {updateConstructorPoints(
-            Point(34,24),
-            Point(34,24),
-            Point(34,24),
-            Point(34,24))}, 4 
-    }
+double Rectangle::area() const {
 
+    int width =  abs(this->arr->get(0)->get_x() - this->arr->get(1)->get_x());
+    int height = abs(this->arr->get(2)->get_y() - this->arr->get(0)->get_y());
+
+    return width*height;
+}
 
 
 
+Triangle::Triangle(const Point p1, const Point p2, const Point p3) : Polygon{ Polygon::updateConstructorPoints(
+                                                                        p1,
+                                                                        p2,
+                                                                        p3), 3 } {
+    cout << "Triangle(p1,p2,p3,p4) constructor" << endl;
+};
 
 
+double dist(const Point &p1, const Point &p2) {
+
+    double delta_x = p1.get_x() - p2.get_x();
+    double delta_y = p1.get_y() - p2.get_y();
+
+    return sqrt(pow(delta_x,2) + pow(delta_y,2));
+}
+
+
+double Triangle::area() const {
+
+    double a = dist(*this->arr->get(0), *this->arr->get(1));
+    double b = dist(*this->arr->get(1), *this->arr->get(2));
+    double c = dist(*this->arr->get(0), *this->arr->get(2));
+
+    double s = (a+b+c)/2;
+
+    double K = sqrt( s*(s - a)*(s - b)*(s - c));
+
+    return K;
+};
